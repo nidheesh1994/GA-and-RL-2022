@@ -8,7 +8,7 @@ public class GeneticAlgorithm : MonoBehaviour
     public int populationSize = 50;
     public int initialGeneLength = 400;
     public float mutationRate = 0.01f;
-    public float crossoverRate = 0.7f;
+    public float crossoverRate = 0.8f;
     public int generations = 10000;
     public bool dynamicGeneLength = true;
     public bool useSegmentCrossover = true;
@@ -26,7 +26,7 @@ public class GeneticAlgorithm : MonoBehaviour
     private int freezeIndexTorque = 0;
     private int freezeIndexSteering = 0;
     private bool isCoolDown = false;
-    private int maxCoolDownSteps = 500;
+    private int maxCoolDownSteps = 1000;
     private int coolDownStep = 0;
     private List<float> possibleValues = new List<float>();
 
@@ -98,7 +98,19 @@ public class GeneticAlgorithm : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (isCoolDown) { if (++coolDownStep > maxCoolDownSteps) { isCoolDown = false; coolDownStep = 0; } return; }
+        if (isCoolDown)
+        {
+            if (++coolDownStep > maxCoolDownSteps)
+            {
+                isCoolDown = false; coolDownStep = 0;
+            }
+            for (int i = 0; i < populationSize; i++)
+            {
+                robotInstances[i].ManualApplyControl(0f, 0f);
+            }
+
+            return;
+        }
         if (currentGeneration >= generations) return;
 
         if (currentStep < currentGeneLength || !AllIndividualsDone())
@@ -139,10 +151,11 @@ public class GeneticAlgorithm : MonoBehaviour
 
     void ExtendIndividual(int index, float ors, int turn = 0)
     {
-        int end = (int)( possibleValues.Count * 0.60f);
+        int end = (int)(possibleValues.Count * 0.60f);
         int start = (int)(possibleValues.Count / 2);
-        if(ors  <= -2f){
-            end = (int) possibleValues.Count;
+        if (ors <= -2f)
+        {
+            end = (int)possibleValues.Count;
             start = (int)(possibleValues.Count * 0.9f);
         }
         float t = possibleValues[Random.Range(start, end)];
@@ -152,9 +165,19 @@ public class GeneticAlgorithm : MonoBehaviour
         int val1 = turn > 0 ? (int)(possibleValues.Count * 0.25f) : 0;
         int val2 = turn < 0 ? possibleValues.Count / 3 : possibleValues.Count;
 
-        if(turn == 0 && ors <= -2f){
-            val1 = (int)(possibleValues.Count * 0.25f);
-            val2 = (int)(possibleValues.Count * 0.75f);
+        if (turn == 0)
+        {
+            if (ors <= -2f)
+            {
+                val1 = (int)(possibleValues.Count * 0.25f);
+                val2 = (int)(possibleValues.Count * 0.75f);
+            }
+            else if (ors >= 2f)
+            {
+
+                val1 = (int)(possibleValues.Count * 0.25f);
+                val2 = (int)(possibleValues.Count * 0.55f);
+            }
         }
         float s = possibleValues[Random.Range(val1, val2)];
 
@@ -184,8 +207,17 @@ public class GeneticAlgorithm : MonoBehaviour
     void EvolveBothPopulations()
     {
         List<int> sorted = GetSortedIndices(steeringFitnessScores);
+        float avg = Average(steeringFitnessScores);
+        float best = Max(steeringFitnessScores);
+
+        if (avg >= 0.8f * best)
+        {
+            freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
+            freezeIndexTorque = freezeIndexSteering;
+        }
+
         Debug.Log($"Torque best: {Max(torqueFitnessScores)}, avg: {Average(torqueFitnessScores)}, generation: {currentGeneration}, geneLength: {currentGeneLength}");
-        Debug.Log($"Steering best: {Max(steeringFitnessScores)}, avg: {Average(steeringFitnessScores)}, generation: {currentGeneration}, geneLength: {currentGeneLength}");
+        Debug.Log($"Steering best: {best}, avg: {avg}, generation: {currentGeneration}, geneLength: {currentGeneLength}, freezeIndex: {freezeIndexSteering}");
 
         CreateNewPopulationPair(ref torquePopulation, torqueFitnessScores, freezeIndexTorque,
                                 ref steeringPopulation, steeringFitnessScores, freezeIndexSteering, sorted);
@@ -257,7 +289,7 @@ public class GeneticAlgorithm : MonoBehaviour
         c1 = new List<float>(p1);
         c2 = new List<float>(p2);
 
-        if (useSegmentCrossover && p1.Count > freezeIdx + 2)
+        if (useSegmentCrossover && p1.Count > freezeIdx + 2 && Random.value < crossoverRate)
         {
             int pt1 = fixedPt1 ?? Random.Range(freezeIdx + 1, p1.Count - 2);
             int pt2 = fixedPt2 ?? Random.Range(pt1, p1.Count - 1);
