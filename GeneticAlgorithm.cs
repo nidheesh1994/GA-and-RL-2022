@@ -29,6 +29,9 @@ public class GeneticAlgorithm : MonoBehaviour
     private int maxCoolDownSteps = 1000;
     private int coolDownStep = 0;
     private List<float> possibleValues = new List<float>();
+    private int steadyGenerations = 0;
+    private const int steadyThreshold = 3;
+    private const float trimPercent = 0.1f;
 
     private void Start()
     {
@@ -212,12 +215,40 @@ public class GeneticAlgorithm : MonoBehaviour
 
         if (avg >= 0.8f * best)
         {
+            steadyGenerations++;
             freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
             freezeIndexTorque = freezeIndexSteering;
+
+            if (steadyGenerations >= steadyThreshold)
+            {
+                int trimAmount = Mathf.Min(500, Mathf.CeilToInt(currentGeneLength * trimPercent));
+                currentGeneLength -= trimAmount;
+                currentGeneLength = Mathf.Max(currentGeneLength, initialGeneLength); // Don't shrink below initial
+
+                Debug.Log($"🔥 Trimming last {trimAmount} genes from each individual (new geneLength: {currentGeneLength})");
+
+                for (int i = 0; i < populationSize; i++)
+                {
+                    if (torquePopulation[i].Count > trimAmount)
+                        torquePopulation[i].RemoveRange(torquePopulation[i].Count - trimAmount, trimAmount);
+
+                    if (steeringPopulation[i].Count > trimAmount)
+                        steeringPopulation[i].RemoveRange(steeringPopulation[i].Count - trimAmount, trimAmount);
+                }
+
+                // Reset freeze to avoid mismatch with new gene length
+                freezeIndexSteering = 0;
+                freezeIndexTorque = 0;
+                steadyGenerations = 0;
+            }
+        }
+        else
+        {
+            steadyGenerations = 0;
         }
 
         Debug.Log($"Torque best: {Max(torqueFitnessScores)}, avg: {Average(torqueFitnessScores)}, generation: {currentGeneration}, geneLength: {currentGeneLength}");
-        Debug.Log($"Steering best: {best}, avg: {avg}, generation: {currentGeneration}, geneLength: {currentGeneLength}, freezeIndex: {freezeIndexSteering}");
+        Debug.Log($"Steering best: {best}, avg: {avg}, generation: {currentGeneration}, geneLength: {currentGeneLength}, freezeIndex: {freezeIndexSteering}, steadyGenerations: {steadyGenerations}");
 
         CreateNewPopulationPair(ref torquePopulation, torqueFitnessScores, freezeIndexTorque,
                                 ref steeringPopulation, steeringFitnessScores, freezeIndexSteering, sorted);
