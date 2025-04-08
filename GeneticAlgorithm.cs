@@ -8,7 +8,7 @@ public class GeneticAlgorithm : MonoBehaviour
     public int populationSize = 50;
     public int initialGeneLength = 400;
     public float mutationRate = 0.01f;
-    public float crossoverRate = 0.8f;
+    public float crossoverRate = 0.7f;
     public int generations = 10000;
     public bool dynamicGeneLength = true;
     public bool useSegmentCrossover = true;
@@ -32,10 +32,13 @@ public class GeneticAlgorithm : MonoBehaviour
     private int steadyGenerations = 0;
     private const int steadyThreshold = 3;
     private const float trimPercent = 0.1f;
+    private int previousGeneLength;
 
     private void Start()
     {
         currentGeneLength = initialGeneLength;
+        previousGeneLength = currentGeneLength;
+
         foreach (var listener in FindObjectsOfType<AudioListener>())
             if (listener != GetComponent<AudioListener>()) listener.enabled = false;
 
@@ -213,7 +216,14 @@ public class GeneticAlgorithm : MonoBehaviour
         float avg = Average(steeringFitnessScores);
         float best = Max(steeringFitnessScores);
 
-        if (avg >= 0.8f * best)
+        // 🧠 Check if gene length was increased in this generation
+        if (currentGeneLength > previousGeneLength)
+        {
+            Debug.Log("Gene length increased, skipping trim and resetting steadyGenerations.");
+            steadyGenerations = 0;
+            previousGeneLength = currentGeneLength; // Update to current
+        }
+        else if (avg >= 0.8f * best)
         {
             steadyGenerations++;
             freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
@@ -235,10 +245,7 @@ public class GeneticAlgorithm : MonoBehaviour
                     if (steeringPopulation[i].Count > trimAmount)
                         steeringPopulation[i].RemoveRange(steeringPopulation[i].Count - trimAmount, trimAmount);
                 }
-
-                // Reset freeze to avoid mismatch with new gene length
-                freezeIndexSteering = 0;
-                freezeIndexTorque = 0;
+                
                 steadyGenerations = 0;
             }
         }
@@ -247,6 +254,7 @@ public class GeneticAlgorithm : MonoBehaviour
             steadyGenerations = 0;
         }
 
+        previousGeneLength = currentGeneLength; // ✅ Always update this at the end
         Debug.Log($"Torque best: {Max(torqueFitnessScores)}, avg: {Average(torqueFitnessScores)}, generation: {currentGeneration}, geneLength: {currentGeneLength}");
         Debug.Log($"Steering best: {best}, avg: {avg}, generation: {currentGeneration}, geneLength: {currentGeneLength}, freezeIndex: {freezeIndexSteering}, steadyGenerations: {steadyGenerations}");
 
