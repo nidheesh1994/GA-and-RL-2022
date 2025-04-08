@@ -169,14 +169,14 @@ public class GeneticAlgorithm : MonoBehaviour
         {
             if (ors <= -2f)
             {
-                val1 = (int)(possibleValues.Count * 0.25f);
-                val2 = (int)(possibleValues.Count * 0.75f);
+                val1 = (int)(possibleValues.Count * 0.35f);
+                val2 = (int)(possibleValues.Count * 0.65f);
             }
             else if (ors >= 2f)
             {
 
-                val1 = (int)(possibleValues.Count * 0.25f);
-                val2 = (int)(possibleValues.Count * 0.55f);
+                val1 = (int)(possibleValues.Count * 0.35f);
+                val2 = (int)(possibleValues.Count * 0.65f);
             }
         }
         float s = possibleValues[Random.Range(val1, val2)];

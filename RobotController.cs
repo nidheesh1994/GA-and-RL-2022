@@ -89,7 +89,7 @@ public class RobotController : MonoBehaviour
 
         float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
 
-        if (IsOutOfTrack() || (checkSpeed && speed <= 1f))
+        if (IsOutOfTrack() || (checkSpeed && speed <= 0.2f))
         {
             ga.UpdateFitness(individualIndex, totalTorqueReward, totalSteeringReward, true);
             isActive = false;
@@ -155,7 +155,7 @@ public class RobotController : MonoBehaviour
         {
             if (torque >= 250f)
                 reward += 3f;
-            else if(torque <=150f)
+            else if (torque <= 150f)
                 reward += -1f;
         }
         reward += HandleEdgeDetection();
@@ -193,7 +193,7 @@ public class RobotController : MonoBehaviour
 
         }
 
-        return 2f;
+        return 5f;
     }
 
     public void ManualReset()
@@ -257,10 +257,10 @@ public class RobotController : MonoBehaviour
         FRS.localRotation = Quaternion.Euler(45, 0, 0);
         L1S.localRotation = Quaternion.Euler(45, -15, 0);
         L2S.localRotation = Quaternion.Euler(8, -35, 0);
-        L3S.localRotation = Quaternion.Euler(45, -90, 0);
+        L3S.localRotation = Quaternion.Euler(40, -90, 0);
         R1S.localRotation = Quaternion.Euler(45, 15, 0);
         R2S.localRotation = Quaternion.Euler(8, 35, 0);
-        R3S.localRotation = Quaternion.Euler(45, 90, 0);
+        R3S.localRotation = Quaternion.Euler(40, 90, 0);
         Down.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
