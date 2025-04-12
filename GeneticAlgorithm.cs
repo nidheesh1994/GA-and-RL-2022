@@ -168,8 +168,11 @@ public class GeneticAlgorithm : MonoBehaviour
 
         // Debug.Log($"start: {start}, end: {end}, ors: {ors}, torque: {t}");
 
-        int val1 = turn > 0 ? (int)(possibleValues.Count * 0.25f) : 0;
-        int val2 = turn < 0 ? possibleValues.Count / 3 : possibleValues.Count;
+        // int val1 = turn > 0 ? (int)(possibleValues.Count * 0.25f) : 0;
+        // int val2 = turn < 0 ? (int)(possibleValues.Count * 0.75f) : possibleValues.Count;
+
+        int val1 = 0;
+        int val2 = possibleValues.Count;
 
         if (turn == 0)
         {
@@ -185,6 +188,23 @@ public class GeneticAlgorithm : MonoBehaviour
                 val2 = (int)(possibleValues.Count * 0.65f);
             }
         }
+        else if (turn == 1)
+        {
+            val1 = (int)(possibleValues.Count * 0.25f);
+            val2 = possibleValues.Count;
+        }
+        else if (turn == 2)
+        {
+            val1 = (int)(possibleValues.Count * 0.25f);
+            val2 = (int)(possibleValues.Count * 0.60f);
+        }
+        else if (turn == 3)
+        {
+            val1 = (int)(possibleValues.Count * 0.40f);
+            val2 = (int)(possibleValues.Count * 0.75f);
+        }
+
+
         float s = possibleValues[Random.Range(val1, val2)];
 
         // Debug.Log($"ExtendIndividual steer: {s}, val1: {val1}, val2: {val2} torque: {t} turn: {turn}, end: {end}, total: {possibleValues.Count}, ors: {ors}");
@@ -215,6 +235,7 @@ public class GeneticAlgorithm : MonoBehaviour
         List<int> sorted = GetSortedIndices(steeringFitnessScores);
         float avg = Average(steeringFitnessScores);
         float best = Max(steeringFitnessScores);
+        float diff = best - avg;
 
         // 🧠 Check if gene length was increased in this generation
         if (currentGeneLength > previousGeneLength)
@@ -227,11 +248,12 @@ public class GeneticAlgorithm : MonoBehaviour
         {
             steadyGenerations++;
             freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
+            // freezeIndexSteering = 0;
             freezeIndexTorque = freezeIndexSteering;
 
-            if (steadyGenerations >= steadyThreshold)
+            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 5)
             {
-                int trimAmount = Mathf.Min(500, Mathf.CeilToInt(currentGeneLength * trimPercent));
+                int trimAmount = Mathf.Min(100, Mathf.CeilToInt(currentGeneLength * trimPercent));
                 currentGeneLength -= trimAmount;
                 currentGeneLength = Mathf.Max(currentGeneLength, initialGeneLength); // Don't shrink below initial
 
@@ -245,7 +267,7 @@ public class GeneticAlgorithm : MonoBehaviour
                     if (steeringPopulation[i].Count > trimAmount)
                         steeringPopulation[i].RemoveRange(steeringPopulation[i].Count - trimAmount, trimAmount);
                 }
-                
+
                 steadyGenerations = 0;
             }
         }
@@ -283,6 +305,40 @@ public class GeneticAlgorithm : MonoBehaviour
         {
             newTorque.Add(new List<float>(torquePop[sorted[i]]));
             newSteer.Add(new List<float>(steerPop[sorted[i]]));
+        }
+
+        // 🔥 Generate at least 5 children from BEST + random in pool using segment crossover
+        int childrenFromBest = 3;
+        int bestIdx = sorted[0];
+        newTorque.Add(new List<float>(torquePop[bestIdx]));
+        newSteer.Add(new List<float>(steerPop[bestIdx]));
+        newTorque.Add(new List<float>(torquePop[bestIdx]));
+        newSteer.Add(new List<float>(steerPop[bestIdx]));
+        newTorque.Add(new List<float>(torquePop[bestIdx]));
+        newSteer.Add(new List<float>(steerPop[bestIdx]));
+
+        for (int i = 0; i < childrenFromBest && newTorque.Count < populationSize; i++)
+        {
+            int mateIdx = sorted[Random.Range(1, eliteCount)]; // avoid best mating with itself
+
+            int? pt1 = null, pt2 = null;
+            if (useSegmentCrossover && torquePop[bestIdx].Count > freezeTorque + 2)
+            {
+                pt1 = Random.Range(freezeTorque + 1, torquePop[bestIdx].Count - 2);
+                pt2 = Random.Range(pt1.Value, torquePop[bestIdx].Count - 1);
+            }
+
+            SharedCrossover(torquePop[bestIdx], torquePop[mateIdx], out var c1T, out _, freezeTorque, pt1, pt2);
+            SharedCrossover(steerPop[bestIdx], steerPop[mateIdx], out var c1S, out _, freezeSteer, pt1, pt2);
+
+            Mutate(c1T, freezeTorque);
+            Mutate(c1S, freezeSteer);
+
+            ExtendToLength(c1T, currentGeneLength, torquePop[bestIdx]);
+            ExtendToLength(c1S, currentGeneLength, steerPop[bestIdx]);
+
+            newTorque.Add(c1T);
+            newSteer.Add(c1S);
         }
 
         while (newTorque.Count < populationSize)

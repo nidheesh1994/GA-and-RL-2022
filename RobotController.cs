@@ -131,21 +131,43 @@ public class RobotController : MonoBehaviour
     {
         float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
         float reward = 0f;
+        int road = GetRoad();
 
-        if (GetRoad() == 1)
+        if (speed > 0f)
+        {
+            reward += speed > 2f ? (speed < 6f ? 1f : -0.3f) : -1f;
+        }
+        else
+        {
+            reward -= 1f;
+        }
+
+        if (road == 1)
         {
             if (steeringAngle > 5f && steeringAngle < 30f)
             {
                 // Debug.Log("Turning rewards adding");
-                reward += steeringAngle > 5f ? 1f : 2f;
+                reward += steeringAngle > 5f ? 1f : 0f;
                 reward += steeringAngle > 10f ? 2f : 0f;
                 reward += steeringAngle > 15f ? 3f : 0f;
             }
             else
                 reward += -5f;
         }
+        else if (road == -1)
+        {
+            if (steeringAngle < -5f && steeringAngle > -30f)
+            {
+                // Debug.Log("Turning rewards adding");
+                reward += steeringAngle < -5f ? 1f : 0f;
+                reward += steeringAngle < -10f ? 2f : 0f;
+                reward += steeringAngle < -15f ? 3f : 0f;
+            }
+            else
+                reward += -5f;
+        }
 
-        if (GetRoad() == 0 && steeringAngle > -10f && steeringAngle < 10f)
+        if (road == 0 && steeringAngle > -10f && steeringAngle < 10f)
             reward += 1f;
         else
             reward += -1f;
@@ -225,9 +247,13 @@ public class RobotController : MonoBehaviour
             string hitObject = sensorReadings[key].Item2;
             // Debug.Log($"Hitobject: {hitObject}");
 
-            if (hitObject.Contains("MT_Turn (1)") || hitObject.Contains("MT_Turn (2)"))
+            if (hitObject.Contains("MT_Turn (1)") || hitObject.Contains("MT_Turn (2)") || hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)") || hitObject.Contains("MT_Turn (8)"))
             {
                 return 1;
+            }
+            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (8)"))
+            {
+                return -1;
             }
         }
 
