@@ -244,16 +244,25 @@ public class GeneticAlgorithm : MonoBehaviour
             steadyGenerations = 0;
             previousGeneLength = currentGeneLength; // Update to current
         }
-        else if (avg >= 0.8f * best)
+        else if (avg >= 0.8f * best || (currentGeneLength >= 3200 && avg >= 0.7f * best))
         {
             steadyGenerations++;
-            freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
+            if (currentGeneLength <= 3200)
+            {
+                freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, (int)(currentGeneLength / 3));
+            }
+            else
+            {
+                freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, currentGeneLength - 650);
+            }
+
             // freezeIndexSteering = 0;
             freezeIndexTorque = freezeIndexSteering;
 
-            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 5)
+            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 8)
             {
-                int trimAmount = Mathf.Min(200, Mathf.CeilToInt(currentGeneLength * trimPercent));
+                int trimMax = currentGeneLength >= 2500 ? 100 : 200;
+                int trimAmount = Mathf.Min(trimMax, Mathf.CeilToInt(currentGeneLength * trimPercent));
                 currentGeneLength -= trimAmount;
                 currentGeneLength = Mathf.Max(currentGeneLength, initialGeneLength); // Don't shrink below initial
 
