@@ -195,13 +195,13 @@ public class GeneticAlgorithm : MonoBehaviour
         }
         else if (turn == 2)
         {
-            val1 = (int)(possibleValues.Count * 0.25f);
-            val2 = (int)(possibleValues.Count * 0.60f);
+            val1 = 0;
+            val2 = (int)(possibleValues.Count * 0.75f);
         }
         else if (turn == 3)
         {
-            val1 = (int)(possibleValues.Count * 0.40f);
-            val2 = (int)(possibleValues.Count * 0.75f);
+            val1 = (int)(possibleValues.Count * 0.25f);
+            val2 = possibleValues.Count;
         }
 
 
@@ -253,7 +253,7 @@ public class GeneticAlgorithm : MonoBehaviour
 
             if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 5)
             {
-                int trimAmount = Mathf.Min(100, Mathf.CeilToInt(currentGeneLength * trimPercent));
+                int trimAmount = Mathf.Min(200, Mathf.CeilToInt(currentGeneLength * trimPercent));
                 currentGeneLength -= trimAmount;
                 currentGeneLength = Mathf.Max(currentGeneLength, initialGeneLength); // Don't shrink below initial
 

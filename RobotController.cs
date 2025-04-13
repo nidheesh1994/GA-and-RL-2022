@@ -154,9 +154,9 @@ public class RobotController : MonoBehaviour
             else
                 reward += -5f;
         }
-        else if (road == -1)
+        else if (road == 2)
         {
-            if (steeringAngle < -5f && steeringAngle > -30f)
+            if (steeringAngle < -5f && steeringAngle > -15f)
             {
                 // Debug.Log("Turning rewards adding");
                 reward += steeringAngle < -5f ? 1f : 0f;
@@ -247,13 +247,16 @@ public class RobotController : MonoBehaviour
             string hitObject = sensorReadings[key].Item2;
             // Debug.Log($"Hitobject: {hitObject}");
 
-            if (hitObject.Contains("MT_Turn (1)") || hitObject.Contains("MT_Turn (2)") || hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)") || hitObject.Contains("MT_Turn (8)"))
+            if (hitObject.Contains("MT_Turn (1)") || hitObject.Contains("MT_Turn (2)") || hitObject.Contains("MT_Turn (8)"))
             {
                 return 1;
             }
             else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (8)"))
             {
-                return -1;
+                return 2;
+            }else if(hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)"))
+            {
+                return 3;
             }
         }
 
