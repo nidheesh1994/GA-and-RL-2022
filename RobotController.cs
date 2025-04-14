@@ -61,6 +61,7 @@ public class RobotController : MonoBehaviour
     private float totalSteeringReward = 0f;
 
     private bool finishingPointDetected = false;
+    private Vector3 lastPosition;
 
     private void Start()
     {
@@ -182,6 +183,14 @@ public class RobotController : MonoBehaviour
         }
         reward += HandleEdgeDetection();
 
+        // ✅ ➕ Add reward for distance covered since last frame
+        float deltaDistance = Vector3.Distance(transform.position, lastPosition);
+        reward += deltaDistance * 100f; // 🔁 2f is the weight — adjust as needed
+        // Debug.Log($"Last position: {lastPosition}, current position: {transform.position}, deltaDistance: {deltaDistance}");
+
+        // Update last position
+        lastPosition = transform.position;
+
         return reward;
     }
 
@@ -225,6 +234,7 @@ public class RobotController : MonoBehaviour
         // transform.localPosition = new Vector3(195.6539f, 0.6679955f, -147f); // second env location 
         transform.localPosition = new Vector3(195.6539f, 0.6679955f, -105f); // second env location 
         transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        lastPosition = transform.position;
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.velocity = Vector3.zero;
@@ -254,7 +264,8 @@ public class RobotController : MonoBehaviour
             else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (8)"))
             {
                 return 2;
-            }else if(hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)"))
+            }
+            else if (hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)"))
             {
                 return 3;
             }

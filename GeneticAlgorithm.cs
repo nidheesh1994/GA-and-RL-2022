@@ -33,11 +33,14 @@ public class GeneticAlgorithm : MonoBehaviour
     private const int steadyThreshold = 3;
     private const float trimPercent = 0.1f;
     private int previousGeneLength;
+    private int[] lastUsedGeneIndex;
+
 
     private void Start()
     {
         currentGeneLength = initialGeneLength;
         previousGeneLength = currentGeneLength;
+        lastUsedGeneIndex = new int[populationSize];
 
         foreach (var listener in FindObjectsOfType<AudioListener>())
             if (listener != GetComponent<AudioListener>()) listener.enabled = false;
@@ -94,7 +97,7 @@ public class GeneticAlgorithm : MonoBehaviour
             rc.InitializeForGA(this, i);
 
             List<Vector2> combined = new List<Vector2>();
-            for (int j = 0; j < currentGeneLength; j++)
+            for (int j = 0; j < torquePopulation[i].Count; j++)
                 combined.Add(new Vector2(torquePopulation[i][j], steeringPopulation[i][j]));
 
             rc.SetIndividual(combined);
@@ -128,6 +131,8 @@ public class GeneticAlgorithm : MonoBehaviour
                     float torque = torquePopulation[i][currentStep] * 500f;
                     float steer = steeringPopulation[i][currentStep] * 40f;
                     robotInstances[i].ManualApplyControl(torque, steer);
+                    lastUsedGeneIndex[i] = currentStep;
+
                 }
                 else if (activeIndividuals[i] && dynamicGeneLength)
                 {
@@ -136,6 +141,8 @@ public class GeneticAlgorithm : MonoBehaviour
                     float torque = torquePopulation[i][currentStep] * 500f;
                     float steer = steeringPopulation[i][currentStep] * 40f;
                     robotInstances[i].ManualApplyControl(torque, steer);
+                    lastUsedGeneIndex[i] = currentStep;
+
                 }
             }
             currentStep++;
@@ -220,6 +227,7 @@ public class GeneticAlgorithm : MonoBehaviour
             torqueFitnessScores[index] = torqueFit;
             steeringFitnessScores[index] = steerFit;
             activeIndividuals[index] = false;
+            Debug.Log($"Finished car: {index}, fitness: {steerFit}, geneLength: {torquePopulation[index].Count}, currentStep: {currentStep}");
         }
     }
 
@@ -236,6 +244,7 @@ public class GeneticAlgorithm : MonoBehaviour
         float avg = Average(steeringFitnessScores);
         float best = Max(steeringFitnessScores);
         float diff = best - avg;
+        bool trimming = false;
 
         // 🧠 Check if gene length was increased in this generation
         if (currentGeneLength > previousGeneLength)
@@ -244,7 +253,7 @@ public class GeneticAlgorithm : MonoBehaviour
             steadyGenerations = 0;
             previousGeneLength = currentGeneLength; // Update to current
         }
-        else if (avg >= 0.8f * best || (currentGeneLength >= 3200 && avg >= 0.7f * best))
+        else if (avg >= 0.8f * best || (currentGeneLength >= 2200 && avg >= 0.7f * best))
         {
             steadyGenerations++;
             if (currentGeneLength <= 3200)
@@ -253,28 +262,38 @@ public class GeneticAlgorithm : MonoBehaviour
             }
             else
             {
-                freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, currentGeneLength - 650);
+                freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, currentGeneLength - 800);
             }
 
             // freezeIndexSteering = 0;
             freezeIndexTorque = freezeIndexSteering;
 
-            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 8)
+            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 4)
             {
-                int trimMax = currentGeneLength >= 2500 ? 100 : 200;
+                int trimMax = currentGeneLength >= 2500 ? 150 : 200;
                 int trimAmount = Mathf.Min(trimMax, Mathf.CeilToInt(currentGeneLength * trimPercent));
-                currentGeneLength -= trimAmount;
-                currentGeneLength = Mathf.Max(currentGeneLength, initialGeneLength); // Don't shrink below initial
+                trimming = true;
+                
 
-                Debug.Log($"🔥 Trimming last {trimAmount} genes from each individual (new geneLength: {currentGeneLength})");
+                Debug.Log($"🔥 Trimming last {trimAmount} genes from each individual (current geneLength: {currentGeneLength})");
+
+                int bestCarIndex = sorted[0];
 
                 for (int i = 0; i < populationSize; i++)
                 {
-                    if (torquePopulation[i].Count > trimAmount)
-                        torquePopulation[i].RemoveRange(torquePopulation[i].Count - trimAmount, trimAmount);
+                    if (i == bestCarIndex)
+                        continue;
+                    int lastUsed = lastUsedGeneIndex[i];
+                    int trimStart = Mathf.Max(0, lastUsed - trimAmount + 1); // e.g., trim 100 genes before last used
+                    int trimCount = torquePopulation[i].Count - trimStart;
 
-                    if (steeringPopulation[i].Count > trimAmount)
-                        steeringPopulation[i].RemoveRange(steeringPopulation[i].Count - trimAmount, trimAmount);
+                    if (trimCount > 0 && trimStart < torquePopulation[i].Count)
+                    {
+                        torquePopulation[i].RemoveRange(trimStart, trimCount);
+                        steeringPopulation[i].RemoveRange(trimStart, trimCount);
+                        Debug.Log($"Lastused: {lastUsed}, trimStart: {trimStart}, trimCount:{trimCount}, lenghtaftertrim: {torquePopulation[i].Count}: carIndex: {i}, bestcarIndex: {bestCarIndex}");
+                        currentGeneLength = Mathf.Max(currentGeneLength, torquePopulation[i].Count); // Don't shrink below initial
+                    }
                 }
 
                 steadyGenerations = 0;
@@ -285,23 +304,24 @@ public class GeneticAlgorithm : MonoBehaviour
             steadyGenerations = 0;
         }
 
-        previousGeneLength = currentGeneLength; // ✅ Always update this at the end
+
         Debug.Log($"Torque best: {Max(torqueFitnessScores)}, avg: {Average(torqueFitnessScores)}, generation: {currentGeneration}, geneLength: {currentGeneLength}");
         Debug.Log($"Steering best: {best}, avg: {avg}, generation: {currentGeneration}, geneLength: {currentGeneLength}, freezeIndex: {freezeIndexSteering}, steadyGenerations: {steadyGenerations}");
 
         CreateNewPopulationPair(ref torquePopulation, torqueFitnessScores, freezeIndexTorque,
-                                ref steeringPopulation, steeringFitnessScores, freezeIndexSteering, sorted);
+                                ref steeringPopulation, steeringFitnessScores, freezeIndexSteering, sorted, trimming);
+        previousGeneLength = currentGeneLength; // ✅ Always update this at the end
     }
 
     void CreateNewPopulationPair(ref List<List<float>> torquePop, List<float> torqueScores, int freezeTorque,
-                                 ref List<List<float>> steerPop, List<float> steerScores, int freezeSteer, List<int> sorted)
+                                 ref List<List<float>> steerPop, List<float> steerScores, int freezeSteer, List<int> sorted, bool trimming)
     {
-        int eliteCount = Mathf.Max(1, populationSize / 10);
+        int eliteCount = Mathf.Max(1, (int)(populationSize * 0.4f));
         int poolSize = populationSize / 2;
         List<List<float>> newTorque = new();
         List<List<float>> newSteer = new();
 
-        if (dynamicGeneLength)
+        if (dynamicGeneLength && !trimming)
         {
             for (int i = 0; i < torquePop.Count; i++)
             {
@@ -333,8 +353,17 @@ public class GeneticAlgorithm : MonoBehaviour
             int? pt1 = null, pt2 = null;
             if (useSegmentCrossover && torquePop[bestIdx].Count > freezeTorque + 2)
             {
-                pt1 = Random.Range(freezeTorque + 1, torquePop[bestIdx].Count - 2);
-                pt2 = Random.Range(pt1.Value, torquePop[bestIdx].Count - 1);
+                int len1 = torquePop[bestIdx].Count;
+                int len2 = torquePop[mateIdx].Count;
+                int minLen = Mathf.Min(len1, len2);
+
+                if (useSegmentCrossover && minLen > freezeTorque + 2)
+                {
+                    int maxPt1 = minLen - 2;
+                    pt1 = Random.Range(freezeTorque + 1, maxPt1 + 1);
+                    pt2 = Random.Range(pt1.Value, minLen);
+                }
+
             }
 
             SharedCrossover(torquePop[bestIdx], torquePop[mateIdx], out var c1T, out _, freezeTorque, pt1, pt2);
@@ -343,8 +372,8 @@ public class GeneticAlgorithm : MonoBehaviour
             Mutate(c1T, freezeTorque);
             Mutate(c1S, freezeSteer);
 
-            ExtendToLength(c1T, currentGeneLength, torquePop[bestIdx]);
-            ExtendToLength(c1S, currentGeneLength, steerPop[bestIdx]);
+            // ExtendToLength(c1T, currentGeneLength, torquePop[bestIdx]);
+            // ExtendToLength(c1S, currentGeneLength, steerPop[bestIdx]);
 
             newTorque.Add(c1T);
             newSteer.Add(c1S);
@@ -358,8 +387,17 @@ public class GeneticAlgorithm : MonoBehaviour
             int? pt1 = null, pt2 = null;
             if (useSegmentCrossover && torquePop[idx1].Count > freezeTorque + 2)
             {
-                pt1 = Random.Range(freezeTorque + 1, torquePop[idx1].Count - 2);
-                pt2 = Random.Range(pt1.Value, torquePop[idx1].Count - 1);
+                int len1 = torquePop[idx1].Count;
+                int len2 = torquePop[idx2].Count;
+                int minLen = Mathf.Min(len1, len2);
+
+                if (useSegmentCrossover && minLen > freezeTorque + 2)
+                {
+                    int maxPt1 = minLen - 2;
+                    pt1 = Random.Range(freezeTorque + 1, maxPt1 + 1);
+                    pt2 = Random.Range(pt1.Value, minLen);
+                }
+
             }
 
             SharedCrossover(torquePop[idx1], torquePop[idx2], out var c1T, out var c2T, freezeTorque, pt1, pt2);
@@ -370,10 +408,10 @@ public class GeneticAlgorithm : MonoBehaviour
             Mutate(c1S, freezeSteer);
             Mutate(c2S, freezeSteer);
 
-            ExtendToLength(c1T, currentGeneLength, torquePop[sorted[0]]);
-            ExtendToLength(c2T, currentGeneLength, torquePop[sorted[0]]);
-            ExtendToLength(c1S, currentGeneLength, steerPop[sorted[0]]);
-            ExtendToLength(c2S, currentGeneLength, steerPop[sorted[0]]);
+            // ExtendToLength(c1T, currentGeneLength, torquePop[sorted[0]]);
+            // ExtendToLength(c2T, currentGeneLength, torquePop[sorted[0]]);
+            // ExtendToLength(c1S, currentGeneLength, steerPop[sorted[0]]);
+            // ExtendToLength(c2S, currentGeneLength, steerPop[sorted[0]]);
 
             newTorque.Add(c1T);
             newSteer.Add(c1S);
@@ -403,18 +441,6 @@ public class GeneticAlgorithm : MonoBehaviour
                 float tmp = c1[i];
                 c1[i] = c2[i];
                 c2[i] = tmp;
-            }
-        }
-        else
-        {
-            for (int i = freezeIdx; i < p1.Count; i++)
-            {
-                if (Random.value < crossoverRate)
-                {
-                    float tmp = c1[i];
-                    c1[i] = c2[i];
-                    c2[i] = tmp;
-                }
             }
         }
     }
