@@ -27,7 +27,7 @@ public class GeneticAlgorithm : MonoBehaviour
     private int freezeIndexTorque = 0;
     private int freezeIndexSteering = 0;
     private bool isCoolDown = false;
-    private int maxCoolDownSteps = 1000;
+    private int maxCoolDownSteps = 500;
     private int coolDownStep = 0;
     private List<float> possibleValues = new List<float>();
     private int steadyGenerations = 0;
@@ -102,12 +102,6 @@ public class GeneticAlgorithm : MonoBehaviour
             RobotController rc = obj.GetComponent<RobotController>();
             rc.InitializeForGA(this, i);
 
-            // List<Vector2> combined = new List<Vector2>();
-            // for (int j = 0; j < torquePopulation[i].Count; j++)
-            //     combined.Add(new Vector2(torquePopulation[i][j], steeringPopulation[i][j]));
-
-            // rc.SetIndividual(combined);
-            // Defer control application to allow rigidbody reset
             robotInstances.Add(rc);
             StartCoroutine(DelayedSetIndividual(rc, i));
             
@@ -381,12 +375,12 @@ public class GeneticAlgorithm : MonoBehaviour
             newSteer.Add(new List<float>(steerPop[sorted[i]]));
         }
 
-        // foreach (var (torque, steer) in bestHistory)
-        // {
-        //     newTorque.Add(new List<float>(torque));
-        //     newSteer.Add(new List<float>(steer));
-        //     if (newTorque.Count >= populationSize) break;
-        // }
+        foreach (var (torque, steer) in bestHistory)
+        {
+            newTorque.Add(new List<float>(torque));
+            newSteer.Add(new List<float>(steer));
+            if (newTorque.Count >= populationSize) break;
+        }
 
         // 🔥 Generate at least 5 children from BEST + random in pool using segment crossover
         int childrenFromBest = 3;

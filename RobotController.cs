@@ -238,6 +238,8 @@ public class RobotController : MonoBehaviour
         // transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
         // transform.localPosition = new Vector3(-94.3f, 34.5f, -241f); // second position for GA
         // transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
+        // transform.localPosition = new Vector3(-175.2726f, 35.72535f, -100.3898f); // third position for GA
+        // transform.rotation = Quaternion.Euler(-1.389f, 7.708f, 14.398f);
         transform.localPosition = new Vector3(-149.5589f, 39.61f, -46.64824f); // last position for GA
         transform.rotation = Quaternion.Euler(0f, 89.627f, 0f);
         lastPosition = transform.position;
@@ -267,11 +269,11 @@ public class RobotController : MonoBehaviour
             {
                 return 1;
             }
-            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (8)"))
+            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (6)") || hitObject.Contains("MT_Turn (5)")  || hitObject.Contains("MT_Turn (11)"))
             {
                 return 2;
             }
-            else if (hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)"))
+            else if (hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)") || hitObject.Contains("MT_Turn (12)") || hitObject.Contains("MT_Turn (10)"))
             {
                 return 3;
             }
