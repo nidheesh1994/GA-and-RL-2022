@@ -328,7 +328,7 @@ public class GeneticAlgorithm : MonoBehaviour
             // freezeIndexSteering = 0;
             freezeIndexTorque = freezeIndexSteering;
 
-            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 4)
+            if ((steadyGenerations >= steadyThreshold && diff <= 2500f) || steadyGenerations >= 2)
             {
                 // int trimMax = currentGeneLength >= 2500 ? 150 : 250;
                 // int trimAmount = Mathf.Min(trimMax, Mathf.CeilToInt(currentGeneLength * trimPercent));
@@ -363,6 +363,8 @@ public class GeneticAlgorithm : MonoBehaviour
                 }
 
                 steadyGenerations = 0;
+            }else {
+                trimming = false;
             }
         }
         else

@@ -224,7 +224,7 @@ public class RobotController : MonoBehaviour
 
         if (sensorReadings["Left3"].Item2.StartsWith("ED") || sensorReadings["Right3"].Item2.StartsWith("ED") || sensorReadings["Left3"].Item2.StartsWith("Plane") || sensorReadings["Right3"].Item2.StartsWith("Plane"))
         {
-            // Debug.Log("Close to edge");
+            Debug.Log("Close to edge");
             return -3f;
 
         }
@@ -241,12 +241,12 @@ public class RobotController : MonoBehaviour
         // transform.rotation = Quaternion.Euler(0f, 180f, 0f);
         // transform.localPosition = new Vector3(-94.6284f, 39.55527f, -184.3393f); // new position for GA
         // transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
-        // transform.localPosition = new Vector3(-94.3f, 34.5f, -241f); // second position for GA
-        // transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
+        transform.localPosition = new Vector3(-94.3f, 34.5f, -241f); // second position for GA
+        transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
         // transform.localPosition = new Vector3(-175.2726f, 35.72535f, -100.3898f); // third position for GA
         // transform.rotation = Quaternion.Euler(-1.389f, 7.708f, 14.398f);
-        transform.localPosition = new Vector3(-149.5589f, 39.61f, -46.64824f); // last position for GA
-        transform.rotation = Quaternion.Euler(0f, 89.627f, 0f);
+        // transform.localPosition = new Vector3(-149.5589f, 39.61f, -46.64824f); // last position for GA
+        // transform.rotation = Quaternion.Euler(0f, 89.627f, 0f);
         lastPosition = transform.position;
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.isKinematic = false;
@@ -292,12 +292,12 @@ public class RobotController : MonoBehaviour
     {
         return new Dictionary<string, (float, string)>
         {
-            { "Front", CheckSensor(FRS, false) },
-            { "Left1", CheckSensor(L1S, false) },
-            { "Left2", CheckSensor(L2S) },
+            { "Front", CheckSensor(FRS, true) },
+            { "Left1", CheckSensor(L1S, true) },
+            { "Left2", CheckSensor(L2S, true) },
             { "Left3", CheckSensor(L3S, true) },
-            { "Right1", CheckSensor(R1S, false) },
-            { "Right2", CheckSensor(R2S) },
+            { "Right1", CheckSensor(R1S, true) },
+            { "Right2", CheckSensor(R2S, true) },
             { "Right3", CheckSensor(R3S, true) },
             { "Down", CheckSensor(Down) },
             { "ORS", CheckOrientationSensor() },
@@ -307,13 +307,13 @@ public class RobotController : MonoBehaviour
 
     private void SetSensorOrientations()
     {
-        FRS.localRotation = Quaternion.Euler(45, 0, 0);
-        L1S.localRotation = Quaternion.Euler(45, -15, 0);
+        FRS.localRotation = Quaternion.Euler(8, 0, 0);
+        L1S.localRotation = Quaternion.Euler(8, -15, 0);
         L2S.localRotation = Quaternion.Euler(8, -35, 0);
-        L3S.localRotation = Quaternion.Euler(40, -90, 0);
-        R1S.localRotation = Quaternion.Euler(45, 15, 0);
+        L3S.localRotation = Quaternion.Euler(15, -90, 0);
+        R1S.localRotation = Quaternion.Euler(8, 15, 0);
         R2S.localRotation = Quaternion.Euler(8, 35, 0);
-        R3S.localRotation = Quaternion.Euler(40, 90, 0);
+        R3S.localRotation = Quaternion.Euler(15, 90, 0);
         Down.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
