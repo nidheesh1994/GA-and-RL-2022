@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.Collections;
+using System.IO;
 
 public class GeneticAlgorithm : MonoBehaviour
 {
@@ -37,6 +38,8 @@ public class GeneticAlgorithm : MonoBehaviour
     private int[] lastUsedGeneIndex;
     private Queue<(List<float> torque, List<float> steer)> bestHistory = new();
     private int bestHistoryLimit = 5;
+    // New field for CSV writing
+    private StreamWriter csvWriter;
 
 
 
@@ -51,7 +54,7 @@ public class GeneticAlgorithm : MonoBehaviour
 
         InitializePossibleValues();
         InitializePopulation();
-        InitializeRobots();
+        ResetGeneration();
     }
 
     void InitializePossibleValues()
@@ -148,6 +151,14 @@ public class GeneticAlgorithm : MonoBehaviour
                     float torque = torquePopulation[i][currentStep] * 500f;
                     float steer = steeringPopulation[i][currentStep] * 40f;
                     robotInstances[i].ManualApplyControl(torque, steer);
+
+                    float appliedTorque = robotInstances[i].GetCurrentMotorTorque();
+                    float appliedSteering = robotInstances[i].GetCurrentSteerAngle();
+                    float reward = robotInstances[i].GetSteeringReward();
+
+                    // Log data to CSV immediately
+                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{reward}");
+
                     lastUsedGeneIndex[i] = currentStep;
 
                 }
@@ -158,6 +169,14 @@ public class GeneticAlgorithm : MonoBehaviour
                     float torque = torquePopulation[i][currentStep] * 500f;
                     float steer = steeringPopulation[i][currentStep] * 40f;
                     robotInstances[i].ManualApplyControl(torque, steer);
+
+                    float appliedTorque = robotInstances[i].GetCurrentMotorTorque();
+                    float appliedSteering = robotInstances[i].GetCurrentSteerAngle();
+                    float fitness = steeringFitnessScores[i]; // Current fitness (may be 0 until finalized)
+
+                    // Log data to CSV immediately
+                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{fitness}");
+
                     lastUsedGeneIndex[i] = currentStep;
 
                 }
@@ -169,6 +188,8 @@ public class GeneticAlgorithm : MonoBehaviour
         }
         else if (!activeIndividuals.Contains(true))
         {
+            csvWriter.Close();
+            Debug.Log($"Generation {currentGeneration} data logged to {Path.Combine(Application.persistentDataPath, $"generation_{currentGeneration}.csv")}");
             EvolveBothPopulations();
             isCoolDown = true;
             currentGeneration++;
@@ -250,8 +271,14 @@ public class GeneticAlgorithm : MonoBehaviour
 
     void ResetGeneration()
     {
-        activeIndividuals = new(new bool[populationSize]);
+        activeIndividuals = new List<bool>(new bool[populationSize]);
         for (int i = 0; i < populationSize; i++) activeIndividuals[i] = true;
+
+        // Open a new CSV file for this generation
+        string filePath = Path.Combine(Application.persistentDataPath, $"generation_{currentGeneration}.csv");
+        csvWriter = new StreamWriter(filePath);
+        csvWriter.WriteLine("Generation,IndividualIndex,Step,GeneTorque,GeneSteering,AppliedTorque,AppliedSteering,Fitness");
+
         InitializeRobots();
     }
 

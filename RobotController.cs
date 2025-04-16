@@ -63,6 +63,11 @@ public class RobotController : MonoBehaviour
     private bool finishingPointDetected = false;
     private Vector3 lastPosition;
 
+    public float GetCurrentMotorTorque() => currentMotorTorque;
+    public float GetCurrentSteerAngle() => currentSteerAngle;
+
+    public float GetSteeringReward() => totalSteeringReward;
+
     private void Start()
     {
         ga = FindObjectOfType<GeneticAlgorithm>();
@@ -269,7 +274,7 @@ public class RobotController : MonoBehaviour
             {
                 return 1;
             }
-            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (6)") || hitObject.Contains("MT_Turn (5)")  || hitObject.Contains("MT_Turn (11)"))
+            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (6)") || hitObject.Contains("MT_Turn (5)") || hitObject.Contains("MT_Turn (11)"))
             {
                 return 2;
             }
