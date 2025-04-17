@@ -107,7 +107,7 @@ public class GeneticAlgorithm : MonoBehaviour
 
             robotInstances.Add(rc);
             StartCoroutine(DelayedSetIndividual(rc, i));
-            
+
         }
     }
 
@@ -155,9 +155,11 @@ public class GeneticAlgorithm : MonoBehaviour
                     float appliedTorque = robotInstances[i].GetCurrentMotorTorque();
                     float appliedSteering = robotInstances[i].GetCurrentSteerAngle();
                     float reward = robotInstances[i].GetSteeringReward();
+                    var sensorReadings = robotInstances[i].GetSensorData();
+                    float speed = robotInstances[i].GetSpeed();
 
                     // Log data to CSV immediately
-                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{reward}");
+                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{reward}, {sensorReadings["Front"].Item1}, {sensorReadings["Left1"].Item1}, {sensorReadings["Left2"].Item1}, {sensorReadings["Left3"].Item1}, {sensorReadings["Right1"].Item1}, {sensorReadings["Right2"].Item1}, {sensorReadings["Right3"].Item1}, {sensorReadings["ORS"].Item1}, {sensorReadings["ORSZ"].Item1}, {speed}");
 
                     lastUsedGeneIndex[i] = currentStep;
 
@@ -172,10 +174,12 @@ public class GeneticAlgorithm : MonoBehaviour
 
                     float appliedTorque = robotInstances[i].GetCurrentMotorTorque();
                     float appliedSteering = robotInstances[i].GetCurrentSteerAngle();
-                    float fitness = steeringFitnessScores[i]; // Current fitness (may be 0 until finalized)
+                    float reward = robotInstances[i].GetSteeringReward();
+                    var sensorReadings = robotInstances[i].GetSensorData();
+                    float speed = robotInstances[i].GetSpeed();
 
                     // Log data to CSV immediately
-                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{fitness}");
+                    csvWriter.WriteLine($"{currentGeneration},{i},{currentStep},{torquePopulation[i][currentStep]},{steeringPopulation[i][currentStep]},{appliedTorque},{appliedSteering},{reward}, {sensorReadings["Front"].Item1}, {sensorReadings["Left1"].Item1}, {sensorReadings["Left2"].Item1}, {sensorReadings["Left3"].Item1}, {sensorReadings["Right1"].Item1}, {sensorReadings["Right2"].Item1}, {sensorReadings["Right3"].Item1}, {sensorReadings["ORS"].Item1}, {sensorReadings["ORSZ"].Item1}, {speed}");
 
                     lastUsedGeneIndex[i] = currentStep;
 
@@ -277,7 +281,7 @@ public class GeneticAlgorithm : MonoBehaviour
         // Open a new CSV file for this generation
         string filePath = Path.Combine(Application.persistentDataPath, $"generation_{currentGeneration}.csv");
         csvWriter = new StreamWriter(filePath);
-        csvWriter.WriteLine("Generation,IndividualIndex,Step,GeneTorque,GeneSteering,AppliedTorque,AppliedSteering,Fitness");
+        csvWriter.WriteLine("Generation,IndividualIndex,Step,GeneTorque,GeneSteering,AppliedTorque,AppliedSteering,Fitness,Front,Left1,Left2,Left3,Right1,Right2,Right3,ORS,ORSZ,Speed");
 
         InitializeRobots();
     }
@@ -318,7 +322,7 @@ public class GeneticAlgorithm : MonoBehaviour
             steadyGenerations++;
             if (currentGeneLength >= 1500)
             {
-               freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, currentGeneLength - 800);
+                freezeIndexSteering = Mathf.Min(freezeIndexSteering + currentGeneLength / 10, currentGeneLength - 800);
             }
             else
             {
@@ -363,7 +367,9 @@ public class GeneticAlgorithm : MonoBehaviour
                 }
 
                 steadyGenerations = 0;
-            }else {
+            }
+            else
+            {
                 trimming = false;
             }
         }

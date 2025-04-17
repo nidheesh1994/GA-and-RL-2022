@@ -133,6 +133,11 @@ public class RobotController : MonoBehaviour
         return reward;
     }
 
+    public float GetSpeed()
+    {
+        return Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
+    }
+
     public float HandleSteeringRewards(float steeringAngle, float torque)
     {
         float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
@@ -224,7 +229,7 @@ public class RobotController : MonoBehaviour
 
         if (sensorReadings["Left3"].Item2.StartsWith("ED") || sensorReadings["Right3"].Item2.StartsWith("ED") || sensorReadings["Left3"].Item2.StartsWith("Plane") || sensorReadings["Right3"].Item2.StartsWith("Plane"))
         {
-            Debug.Log("Close to edge");
+            // Debug.Log("Close to edge");
             return -3f;
 
         }
@@ -288,7 +293,7 @@ public class RobotController : MonoBehaviour
     }
 
     // Sensor Data Collection
-    private Dictionary<string, (float, string)> GetSensorData()
+    public Dictionary<string, (float, string)> GetSensorData()
     {
         return new Dictionary<string, (float, string)>
         {
