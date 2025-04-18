@@ -76,15 +76,25 @@ public class RobotAgent : Agent
     // private float steerMean = -0.21530772745609283f;
     // private float steerStd = 7.084796905517578f;
 
-    private float torqueMean = 90.01801300048828f; // Cobined postion and best 3
-    private float torqueStd = 124.83465576171875f;
-    private float steerMean = 0.861481249332428f;
-    private float steerStd = 6.110722064971924f;
+    // private float torqueMean = 90.01801300048828f; // Cobined postion and best 3
+    // private float torqueStd = 124.83465576171875f;
+    // private float steerMean = 0.861481249332428f;
+    // private float steerStd = 6.110722064971924f;
 
     // private float torqueMean = 89.37027740478516f; // Cobined postion and best 5
     // private float torqueStd = 124.12162017822266f;
     // private float steerMean = 0.862391471862793f;
     // private float steerStd = 6.122593879699707f;
+
+    // private float torqueMean = 92.2625961303711f; // All Cobined postion and best 3
+    // private float torqueStd = 126.49352264404297f;
+    // private float steerMean = 0.5075882077217102f;
+    // private float steerStd = 6.6546711921691895f;
+
+    private float torqueMean = 67.46678161621094f; // Second only and best 3
+    private float torqueStd = 90.83110809326172f;
+    private float steerMean = 0.11064644157886505f;
+    private float steerStd = 6.895825386047363f;
 
 
     public void Start()
@@ -112,15 +122,18 @@ public class RobotAgent : Agent
         FRC.steerAngle = 0f;
 
 
-        transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA working
-        transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
+        // transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA working
+        // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
 
 
-        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // seond position for GA
+        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
         // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
 
         // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
+
+        transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position for GA
+        transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
 
         // Set sensor orientations as defined
