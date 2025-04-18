@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
+using Unity.Barracuda;
 
 public class RobotAgent : Agent
 {
@@ -66,12 +67,34 @@ public class RobotAgent : Agent
     private bool finishingPointDetected = false;
     private Vector3 lastPosition;
     private float episodeTime = 0f;
+    public NNModel onnxModelAsset;
+    private Model runtimeModel;
+    private IWorker worker;
+
+    // private float torqueMean = 96.5890121459961f; first position
+    // private float torqueStd = 130.80125427246094f;
+    // private float steerMean = -0.21530772745609283f;
+    // private float steerStd = 7.084796905517578f;
+
+    private float torqueMean = 90.01801300048828f; // Cobined postion and best 3
+    private float torqueStd = 124.83465576171875f;
+    private float steerMean = 0.861481249332428f;
+    private float steerStd = 6.110722064971924f;
+
+    // private float torqueMean = 89.37027740478516f; // Cobined postion and best 5
+    // private float torqueStd = 124.12162017822266f;
+    // private float steerMean = 0.862391471862793f;
+    // private float steerStd = 6.122593879699707f;
 
 
-    public override void OnEpisodeBegin()
+    public void Start()
     {
         // Reset the episode timer at the beginning of each episode
         episodeTime = 0f;
+
+        runtimeModel = ModelLoader.Load(onnxModelAsset);
+        // Create a worker to run the model
+        worker = WorkerFactory.CreateWorker(WorkerFactory.Type.Auto, runtimeModel);
 
         // Stop the robot's velocity and angular velocity to prevent movement at the start
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -88,11 +111,70 @@ public class RobotAgent : Agent
         FLC.steerAngle = 0f;
         FRC.steerAngle = 0f;
 
-        transform.localPosition = new Vector3(-95.3f, 34.5f, -241f); // second position for GA
-        transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
+
+        transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA working
+        transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
+
+
+        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // seond position for GA
+        // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+
+        // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
+        // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
+
 
         // Set sensor orientations as defined
         SetSensorOrientations();
+    }
+
+    void FixedUpdate()
+    {
+        var sensorReadings = GetSensorData();
+        float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
+
+        float[] inputData = new float[10];
+        inputData[0] = sensorReadings["Front"].Item1;
+        inputData[1] = sensorReadings["Left1"].Item1;
+        inputData[2] = sensorReadings["Left2"].Item1;
+        inputData[3] = sensorReadings["Left3"].Item1;
+        inputData[4] = sensorReadings["Right1"].Item1;
+        inputData[5] = sensorReadings["Right2"].Item1;
+        inputData[6] = sensorReadings["Right3"].Item1;
+        inputData[7] = sensorReadings["ORS"].Item1;
+        inputData[8] = sensorReadings["ORSZ"].Item1;
+        inputData[9] = speed;
+
+        // Create the tensor with shape [batch, height, width, channels] = [1, 1, 1, 10]
+        Tensor inputTensor = new Tensor(1, 1, 1, 10);
+
+        // Populate the tensor with your input data
+        for (int i = 0; i < 10; i++)
+        {
+            inputTensor[0, 0, 0, i] = inputData[i];
+        }
+        // Execute the model with the input tensor
+        worker.Execute(inputTensor);
+
+        // Retrieve the output tensor
+        Tensor outputTensor = worker.PeekOutput();
+
+        // Process the output as needed
+        // For example, if the output is a single value:
+        float normalizedTorque = outputTensor[0];
+        float normalizedSteering = outputTensor[1];
+
+        float actualTorque = normalizedTorque * torqueStd + torqueMean;
+        float actualSteering = normalizedSteering * steerStd + steerMean;
+        // float torque = outputTensor[0];
+        // float steering = outputTensor[1];
+
+        ManualApplyControl(actualTorque, actualSteering);
+
+        Debug.Log($"torque: {actualTorque}, steering: {actualSteering}");
+
+        // Dispose of tensors to free resources
+        inputTensor.Dispose();
+        outputTensor.Dispose();
     }
 
     private void SetSensorOrientations()
@@ -114,7 +196,6 @@ public class RobotAgent : Agent
         var sensorReadings = GetSensorData();
         float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
 
-        Debug.Log("Collect");
 
         sensor.AddObservation(sensorReadings["Front"].Item1);
         sensor.AddObservation(sensorReadings["Left1"].Item1);
@@ -201,15 +282,17 @@ public class RobotAgent : Agent
 
     private void ApplySteering(float targetAngle)
     {
-        currentSteerAngle = Mathf.Lerp(currentSteerAngle, targetAngle, Time.deltaTime * steeringSmoothing);
+        // currentSteerAngle = Mathf.Lerp(currentSteerAngle, targetAngle, Time.deltaTime * steeringSmoothing);
         // Debug.Log($"currentSteerAngle: {currentSteerAngle}");
+        currentSteerAngle = Mathf.Min(40f, targetAngle); ;
         FLC.steerAngle = currentSteerAngle;
         FRC.steerAngle = currentSteerAngle;
     }
 
     private void ApplyMotorTorque(float targetTorque)
     {
-        currentMotorTorque = Mathf.Lerp(currentMotorTorque, targetTorque, Time.deltaTime * accelerationSmoothing);
+        // currentMotorTorque = Mathf.Lerp(currentMotorTorque, targetTorque, Time.deltaTime * accelerationSmoothing);
+        currentMotorTorque = Mathf.Min(300f, targetTorque);
         if (finishingPointDetected && targetTorque == 0f)
             currentMotorTorque = 0;
         // Debug.Log($"currentMotorTorque: {currentMotorTorque}");

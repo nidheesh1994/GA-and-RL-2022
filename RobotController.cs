@@ -239,19 +239,13 @@ public class RobotController : MonoBehaviour
 
     public void ManualReset()
     {
-        // transform.localPosition = new Vector3(195.6539f, 0.6679955f, 192.1293f); //first env location
-        // transform.localPosition = new Vector3(195.6539f, 0.6679955f, -68f); // second env location 
-        // transform.localPosition = new Vector3(195.6539f, 0.6679955f, -147f); // second env location 
-        // transform.localPosition = new Vector3(195.6539f, 0.6679955f, -105f); // second env location 
-        // transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-        // transform.localPosition = new Vector3(-94.6284f, 39.55527f, -184.3393f); // new position for GA
-        // transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
-        transform.localPosition = new Vector3(-94.3f, 34.5f, -241f); // second position for GA
-        transform.rotation = Quaternion.Euler(0f, 3.969f, -0.001f);
-        // transform.localPosition = new Vector3(-175.2726f, 35.72535f, -100.3898f); // third position for GA
-        // transform.rotation = Quaternion.Euler(-1.389f, 7.708f, 14.398f);
-        // transform.localPosition = new Vector3(-149.5589f, 39.61f, -46.64824f); // last position for GA
-        // transform.rotation = Quaternion.Euler(0f, 89.627f, 0f);
+        
+        // transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA
+        // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
+
+        transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // seond position for GA
+        transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+
         lastPosition = transform.position;
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.isKinematic = false;
