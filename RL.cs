@@ -91,11 +91,30 @@ public class RobotAgent : Agent
     // private float steerMean = 0.5075882077217102f;
     // private float steerStd = 6.6546711921691895f;
 
-    private float torqueMean = 67.46678161621094f; // Second only and best 3
-    private float torqueStd = 90.83110809326172f;
-    private float steerMean = 0.11064644157886505f;
-    private float steerStd = 6.895825386047363f;
+    // private float torqueMean = 67.46678161621094f; // Second only and best 3
+    // private float torqueStd = 90.83110809326172f;
+    // private float steerMean = 0.11064644157886505f;
+    // private float steerStd = 6.895825386047363f;
 
+    // private float torqueMean = 119.72089385986328f; // New map p1 and best 3
+    // private float torqueStd = 151.7726593017578f;
+    // private float steerMean = 1.3716881275177002f;
+    // private float steerStd = 5.4518232345581055f;
+
+    // private float torqueMean = 75.60594177246094f; // New map p2 and best 3 working on p2
+    // private float torqueStd = 105.34881591796875f;
+    // private float steerMean = -0.15299881994724274f;
+    // private float steerStd = 6.910661220550537f;
+
+    // private float torqueMean = 93.51426696777344f; // New map c12 and best 3  - 1200 epochs working from 2 points
+    // private float torqueStd = 128.38467407226562f;
+    // private float steerMean = 0.5537295937538147f;
+    // private float steerStd = 6.386470794677734f;
+
+    private float torqueMean = 99.20841979980469f; // New map c123 and best 3 - 1200 epochs
+    private float torqueStd = 132.43568420410156f;
+    private float steerMean = 0.9129691123962402f;
+    private float steerStd = 6.612026214599609f;
 
     public void Start()
     {
@@ -126,14 +145,14 @@ public class RobotAgent : Agent
         // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
 
 
-        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
-        // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+        transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
+        transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
 
         // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
-        transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position for GA
-        transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
+        // transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position for GA
+        // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
 
         // Set sensor orientations as defined
@@ -193,12 +212,12 @@ public class RobotAgent : Agent
     private void SetSensorOrientations()
     {
         FRS.localRotation = Quaternion.Euler(8, 0, 0);
-        L1S.localRotation = Quaternion.Euler(8, -15, 0);
-        L2S.localRotation = Quaternion.Euler(8, -35, 0);
-        L3S.localRotation = Quaternion.Euler(15, -90, 0);
-        R1S.localRotation = Quaternion.Euler(8, 15, 0);
-        R2S.localRotation = Quaternion.Euler(8, 35, 0);
-        R3S.localRotation = Quaternion.Euler(15, 90, 0);
+        L1S.localRotation = Quaternion.Euler(0, -15, 0);
+        L2S.localRotation = Quaternion.Euler(0, -35, 0);
+        L3S.localRotation = Quaternion.Euler(0, -90, 0);
+        R1S.localRotation = Quaternion.Euler(0, 15, 0);
+        R2S.localRotation = Quaternion.Euler(0, 35, 0);
+        R3S.localRotation = Quaternion.Euler(0, 90, 0);
         Down.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
@@ -268,6 +287,7 @@ public class RobotAgent : Agent
 
         if (Physics.Raycast(sensor.position, sensor.forward, out hit, sensorRange, layerMask))
         {
+            Debug.DrawRay(sensor.position, sensor.forward * hit.distance, Color.red);
             return (hit.distance, hit.collider.gameObject.name);
         }
         return (sensorRange, "None");
@@ -305,7 +325,7 @@ public class RobotAgent : Agent
     private void ApplyMotorTorque(float targetTorque)
     {
         // currentMotorTorque = Mathf.Lerp(currentMotorTorque, targetTorque, Time.deltaTime * accelerationSmoothing);
-        currentMotorTorque = Mathf.Min(300f, targetTorque);
+        currentMotorTorque = Mathf.Min(280f, targetTorque);
         if (finishingPointDetected && targetTorque == 0f)
             currentMotorTorque = 0;
         // Debug.Log($"currentMotorTorque: {currentMotorTorque}");

@@ -227,9 +227,9 @@ public class RobotController : MonoBehaviour
     {
         var sensorReadings = GetSensorData();
 
-        if (sensorReadings["Left3"].Item2.StartsWith("ED") || sensorReadings["Right3"].Item2.StartsWith("ED") || sensorReadings["Left3"].Item2.StartsWith("Plane") || sensorReadings["Right3"].Item2.StartsWith("Plane"))
+        if (sensorReadings["Left1"].Item2.StartsWith("ED") || sensorReadings["Right1"].Item2.StartsWith("ED") || sensorReadings["Front"].Item2.StartsWith("ED") )
         {
-            // Debug.Log("Close to edge");
+            // Debug.Log($"left1 : {sensorReadings["Left1"].Item1}, right1: {sensorReadings["Right1"].Item1}, Front: {sensorReadings["Front"].Item1}");
             return -3f;
 
         }
@@ -239,12 +239,15 @@ public class RobotController : MonoBehaviour
 
     public void ManualReset()
     {
-        
+
         // transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA
         // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
 
-        transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // seond position for GA
-        transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
+        // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+
+        transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
+        transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
         lastPosition = transform.position;
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -307,12 +310,12 @@ public class RobotController : MonoBehaviour
     private void SetSensorOrientations()
     {
         FRS.localRotation = Quaternion.Euler(8, 0, 0);
-        L1S.localRotation = Quaternion.Euler(8, -15, 0);
-        L2S.localRotation = Quaternion.Euler(8, -35, 0);
-        L3S.localRotation = Quaternion.Euler(15, -90, 0);
-        R1S.localRotation = Quaternion.Euler(8, 15, 0);
-        R2S.localRotation = Quaternion.Euler(8, 35, 0);
-        R3S.localRotation = Quaternion.Euler(15, 90, 0);
+        L1S.localRotation = Quaternion.Euler(0, -15, 0);
+        L2S.localRotation = Quaternion.Euler(0, -35, 0);
+        L3S.localRotation = Quaternion.Euler(0, -90, 0);
+        R1S.localRotation = Quaternion.Euler(0, 15, 0);
+        R2S.localRotation = Quaternion.Euler(0, 35, 0);
+        R3S.localRotation = Quaternion.Euler(0, 90, 0);
         Down.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
@@ -612,6 +615,7 @@ public class RobotController : MonoBehaviour
 
         if (Physics.Raycast(sensor.position, sensor.forward, out hit, sensorRange, layerMask))
         {
+            Debug.DrawRay(sensor.position, sensor.forward * hit.distance, Color.red);
             return (hit.distance, hit.collider.gameObject.name);
         }
         return (sensorRange, "None");
