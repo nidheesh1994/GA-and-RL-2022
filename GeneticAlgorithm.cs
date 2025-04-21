@@ -27,7 +27,7 @@ public class GeneticAlgorithm : MonoBehaviour
     private int currentGeneLength;
     private int freezeIndexTorque = 0;
     private int freezeIndexSteering = 0;
-    private bool isCoolDown = false;
+    private bool isCoolDown = true;
     private int maxCoolDownSteps = 500;
     private int coolDownStep = 0;
     private List<float> possibleValues = new List<float>();

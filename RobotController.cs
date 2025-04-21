@@ -249,8 +249,11 @@ public class RobotController : MonoBehaviour
         // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
-        transform.localPosition = new Vector3(-174.69f, 35.6f, -142.5f); // fifth position for GA
-        transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
+        // transform.localPosition = new Vector3(-175.0308f, 35.79416f, -140.6013f); // fifth position for GA
+        // transform.rotation = Quaternion.Euler(0.009f, 359.743f, 14.655f);
+
+        transform.localPosition = new Vector3(-126.8295f, 39.55597f, -7.647385f); // sixth position for GA
+        transform.rotation = Quaternion.Euler(0.001f, 273.696f, 0.012f);
 
         lastPosition = transform.position;
         Rigidbody rb = GetComponent<Rigidbody>();

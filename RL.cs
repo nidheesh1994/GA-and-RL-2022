@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Barracuda;
+using System.IO;
 
 public class RobotAgent : Agent
 {
@@ -70,6 +71,9 @@ public class RobotAgent : Agent
     public NNModel onnxModelAsset;
     private Model runtimeModel;
     private IWorker worker;
+    private StreamWriter csvWriter;
+    private int currentStep = 0;
+    private float reward = 0f;
 
     // private float torqueMean = 96.5890121459961f; first position
     // private float torqueStd = 130.80125427246094f;
@@ -121,6 +125,11 @@ public class RobotAgent : Agent
     // private float steerMean = 0.7581171989440918f;
     // private float steerStd = 6.3204569816589355f;
 
+    // private float torqueMean = 87.03598022460938f; // New map c1236 and best 3 - 1200 epochs
+    // private float torqueStd = 120.14628601074219f;
+    // private float steerMean = 0.4904853403568268f;
+    // private float steerStd = 6.690590858459473f;
+
     public void Start()
     {
         // Reset the episode timer at the beginning of each episode
@@ -145,13 +154,17 @@ public class RobotAgent : Agent
         FLC.steerAngle = 0f;
         FRC.steerAngle = 0f;
 
+        string filePath = Path.Combine(Application.persistentDataPath, $"NN_Ooutput_{onnxModelAsset}.csv");
+        csvWriter = new StreamWriter(filePath);
+        csvWriter.WriteLine("Step,AppliedTorque,AppliedSteering,Fitness,Front,Left1,Left2,Left3,Right1,Right2,Right3,ORS,ORSZ,Speed");
 
-        transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA working
-        transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
+
+        // transform.localPosition = new Vector3(34.56854f, 23.92629f, -243.2978f); // first position for GA working
+        // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
 
 
-        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
-        // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+        transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
+        transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
 
         // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
@@ -162,6 +175,11 @@ public class RobotAgent : Agent
         // transform.localPosition = new Vector3(-175.0308f, 35.79416f, -140.6013f); // fifth position for GA
         // transform.rotation = Quaternion.Euler(0.009f, 359.743f, 14.655f);
 
+        // transform.localPosition = new Vector3(37.49f, 24.06f, -115.9f); // initial position for GA
+        // transform.rotation = Quaternion.Euler(0.088f, 181.029f, -4.497f);
+
+
+        lastPosition = transform.localPosition;
 
         // Set sensor orientations as defined
         SetSensorOrientations();
@@ -210,11 +228,130 @@ public class RobotAgent : Agent
 
         ManualApplyControl(actualTorque, actualSteering);
 
+        float currentReward = HandleSteeringRewards(actualTorque, actualSteering);
+        Debug.Log($"Current step: {currentStep}, current reward: {currentReward}");
+
+        csvWriter.WriteLine($"{currentStep},{actualTorque},{actualSteering},{currentReward}, {sensorReadings["Front"].Item1}, {sensorReadings["Left1"].Item1}, {sensorReadings["Left2"].Item1}, {sensorReadings["Left3"].Item1}, {sensorReadings["Right1"].Item1}, {sensorReadings["Right2"].Item1}, {sensorReadings["Right3"].Item1}, {sensorReadings["ORS"].Item1}, {sensorReadings["ORSZ"].Item1}, {speed}");
+
         Debug.Log($"torque: {actualTorque}, steering: {actualSteering}");
 
         // Dispose of tensors to free resources
         inputTensor.Dispose();
         outputTensor.Dispose();
+        currentStep++;
+    }
+
+    void OnApplicationQuit()
+    {
+        Debug.Log("Application ending after " + currentStep + " step");
+        csvWriter.Close();
+        Debug.Log($"NN data logged data logged to {Path.Combine(Application.persistentDataPath, $"NN_Ooutput_{onnxModelAsset}.csv")}");
+    }
+
+    public float HandleSteeringRewards(float steeringAngle, float torque)
+    {
+        float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
+        int road = GetRoad();
+
+        if (speed > 0f)
+        {
+            reward += speed > 2f ? (speed < 6f ? 1f : -0.3f) : -1f;
+        }
+        else
+        {
+            reward -= 1f;
+        }
+
+        if (road == 1)
+        {
+            if (steeringAngle > 5f && steeringAngle < 30f)
+            {
+                // Debug.Log("Turning rewards adding");
+                reward += steeringAngle > 5f ? 1f : 0f;
+                reward += steeringAngle > 10f ? 2f : 0f;
+                reward += steeringAngle > 15f ? 3f : 0f;
+            }
+            else
+                reward += -5f;
+        }
+        else if (road == 2)
+        {
+            if (steeringAngle < -5f && steeringAngle > -15f)
+            {
+                // Debug.Log("Turning rewards adding");
+                reward += steeringAngle < -5f ? 1f : 0f;
+                reward += steeringAngle < -10f ? 2f : 0f;
+                reward += steeringAngle < -15f ? 3f : 0f;
+            }
+            else
+                reward += -5f;
+        }
+
+        if (road == 0 && steeringAngle > -10f && steeringAngle < 10f)
+            reward += 1f;
+        else
+            reward += -1f;
+
+        (float, string) ors = CheckOrientationSensor();
+        if (ors.Item1 <= -2f)
+        {
+            if (torque >= 250f)
+                reward += 3f;
+            else if (torque <= 150f)
+                reward += -1f;
+        }
+        reward += HandleEdgeDetection();
+
+        // ✅ ➕ Add reward for distance covered since last frame
+        float deltaDistance = Vector3.Distance(transform.localPosition, lastPosition);
+        reward += deltaDistance * 100f; // 🔁 2f is the weight — adjust as needed
+        // Debug.Log($"Last position: {lastPosition}, current position: {transform.position}, deltaDistance: {deltaDistance}");
+
+        // Update last position
+        lastPosition = transform.localPosition;
+
+        return reward;
+    }
+
+    private float HandleEdgeDetection()
+    {
+        var sensorReadings = GetSensorData();
+
+        if (sensorReadings["Left1"].Item2.StartsWith("ED") || sensorReadings["Right1"].Item2.StartsWith("ED") || sensorReadings["Front"].Item2.StartsWith("ED"))
+        {
+            // Debug.Log($"left1 : {sensorReadings["Left1"].Item1}, right1: {sensorReadings["Right1"].Item1}, Front: {sensorReadings["Front"].Item1}");
+            return -3f;
+
+        }
+
+        return 5f;
+    }
+
+    public int GetRoad()
+    {
+        var sensorReadings = GetSensorData();
+        string[] keysToCheck = { "Down", };
+
+        foreach (var key in keysToCheck)
+        {
+            string hitObject = sensorReadings[key].Item2;
+            // Debug.Log($"Hitobject: {hitObject}");
+
+            if (hitObject.Contains("MT_Turn (1)") || hitObject.Contains("MT_Turn (2)") || hitObject.Contains("MT_Turn (8)"))
+            {
+                return 1;
+            }
+            else if (hitObject.Contains("MT_Turn (13)") || hitObject.Contains("MT_Turn (14)") || hitObject.Contains("MT_Turn (7)") || hitObject.Contains("MT_Turn (6)") || hitObject.Contains("MT_Turn (5)") || hitObject.Contains("MT_Turn (11)"))
+            {
+                return 2;
+            }
+            else if (hitObject.Contains("MT_Turn (15)") || hitObject.Contains("MT_Turn (9)") || hitObject.Contains("MT_Turn (12)") || hitObject.Contains("MT_Turn (10)"))
+            {
+                return 3;
+            }
+        }
+
+        return 0;
     }
 
     private void SetSensorOrientations()
