@@ -163,8 +163,8 @@ public class RobotAgent : Agent
         // transform.rotation = Quaternion.Euler(0f, 177.441f, -0.001f);
 
 
-        // transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
-        // transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
+        transform.localPosition = new Vector3(-94.5086f, 39.55402f, -303.3212f); // sceond position for GA
+        transform.rotation = Quaternion.Euler(-0.31f, 360.243f, 3.421f);
 
         // transform.localPosition = new Vector3(-93.75f, 34.68f, -242.83f); // third position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
@@ -172,8 +172,8 @@ public class RobotAgent : Agent
         // transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position for GA
         // transform.rotation = Quaternion.Euler(0.014f, 359.737f, 4.498f);
 
-        transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position reversed for GA
-        transform.rotation = Quaternion.Euler(0.014f, 180f, 4.498f);
+        // transform.localPosition = new Vector3(-94.4f, 39.8f, -184.5f); // fourth position reversed for GA
+        // transform.rotation = Quaternion.Euler(0.014f, 180f, 4.498f);
 
         // transform.localPosition = new Vector3(-175.0308f, 35.79416f, -140.6013f); // fifth position for GA
         // transform.rotation = Quaternion.Euler(0.009f, 359.743f, 14.655f);
