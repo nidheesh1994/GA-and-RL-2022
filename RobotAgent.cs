@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Unity.Barracuda;
 using System.IO;
 
-public class RobotAgent : Agent
+public class RobotAgent : MonoBehaviour
 {
 
     [SerializeField] private WheelCollider FLC;
@@ -372,25 +372,25 @@ public class RobotAgent : Agent
         Down.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        // Ensure you're passing 10 floats here in the same order used in training
-        // Example: 7 raycast distances + ORS + ORSZ + speed
-        var sensorReadings = GetSensorData();
-        float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
+    // public override void CollectObservations(VectorSensor sensor)
+    // {
+    //     // Ensure you're passing 10 floats here in the same order used in training
+    //     // Example: 7 raycast distances + ORS + ORSZ + speed
+    //     var sensorReadings = GetSensorData();
+    //     float speed = Vector3.Dot(transform.forward, GetComponent<Rigidbody>().velocity);
 
 
-        sensor.AddObservation(sensorReadings["Front"].Item1);
-        sensor.AddObservation(sensorReadings["Left1"].Item1);
-        sensor.AddObservation(sensorReadings["Left2"].Item1);
-        sensor.AddObservation(sensorReadings["Left3"].Item1);
-        sensor.AddObservation(sensorReadings["Right1"].Item1);
-        sensor.AddObservation(sensorReadings["Right2"].Item1);
-        sensor.AddObservation(sensorReadings["Right3"].Item1);
-        sensor.AddObservation(sensorReadings["ORS"].Item1);
-        sensor.AddObservation(sensorReadings["ORSZ"].Item1);
-        sensor.AddObservation(speed);
-    }
+    //     sensor.AddObservation(sensorReadings["Front"].Item1);
+    //     sensor.AddObservation(sensorReadings["Left1"].Item1);
+    //     sensor.AddObservation(sensorReadings["Left2"].Item1);
+    //     sensor.AddObservation(sensorReadings["Left3"].Item1);
+    //     sensor.AddObservation(sensorReadings["Right1"].Item1);
+    //     sensor.AddObservation(sensorReadings["Right2"].Item1);
+    //     sensor.AddObservation(sensorReadings["Right3"].Item1);
+    //     sensor.AddObservation(sensorReadings["ORS"].Item1);
+    //     sensor.AddObservation(sensorReadings["ORSZ"].Item1);
+    //     sensor.AddObservation(speed);
+    // }
 
     public Dictionary<string, (float, string)> GetSensorData()
     {
@@ -444,17 +444,17 @@ public class RobotAgent : Agent
         return (sensorRange, "None");
     }
 
-    public override void OnActionReceived(ActionBuffers actions)
-    {
-        float motorInput = actions.ContinuousActions[0];
-        float steerInput = actions.ContinuousActions[1];
+    // public override void OnActionReceived(ActionBuffers actions)
+    // {
+    //     float motorInput = actions.ContinuousActions[0];
+    //     float steerInput = actions.ContinuousActions[1];
 
-        float motorTorque = motorInput * 500f;  // same as training
-        float steerAngle = steerInput * 40f;
+    //     float motorTorque = motorInput * 500f;  // same as training
+    //     float steerAngle = steerInput * 40f;
 
-        // Apply to your robot
-        ManualApplyControl(motorTorque, steerAngle);
-    }
+    //     // Apply to your robot
+    //     ManualApplyControl(motorTorque, steerAngle);
+    // }
 
     public void ManualApplyControl(float torque, float steering)
     {
