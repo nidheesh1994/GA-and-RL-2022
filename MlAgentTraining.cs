@@ -91,7 +91,7 @@ public class MlAgentTraining : Agent
         SetSensorOrientations();
         lastPosition = transform.localPosition;
 
-        Debug.Log("Episode has started");
+        // Debug.Log("Episode has started");
     }
 
     public override void Heuristic(in ActionBuffers actionOut)
@@ -121,7 +121,7 @@ public class MlAgentTraining : Agent
             // End the episode after 120 seconds
             AddReward(-0.5f); // Optional: add some reward/penalty for time limit reached
             // Debug.Log("Max time passed ending");
-            Debug.Log("EndEpisode: Timeout");
+            // Debug.Log("EndEpisode: Timeout");
             EndEpisode();
         }
 
@@ -304,7 +304,7 @@ public class MlAgentTraining : Agent
         if (HasPassedFinalCheckpoint() && IsStopped())
         {
             AddReward(1f);
-            Debug.Log("EndEpisode: Successfully completed");
+            // Debug.Log("EndEpisode: Successfully completed");
             EndEpisode();
         }
     }
@@ -355,11 +355,11 @@ public class MlAgentTraining : Agent
             sensor.AddObservation(sensorReadings["ORS"].Item1);
             sensor.AddObservation(sensorReadings["ORSZ"].Item1);
             sensor.AddObservation(speed);
-            Debug.Log("Collection");
+            // Debug.Log("Collection");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"CollectObservations Exception: {ex.Message}");
+            // Debug.LogError($"CollectObservations Exception: {ex.Message}");
         }
     }
 
